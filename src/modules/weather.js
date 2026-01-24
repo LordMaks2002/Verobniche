@@ -1,7 +1,8 @@
 export async function getWeather(latitude, longitude) {
   // Construct the URL to call the Cloudflare Worker proxy
   // The worker will then reconstruct the Open-Meteo URL
-  const workerUrl = `/api/weather?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m&forecast_days=1`;
+  const workerBaseUrl = 'https://weather-worker.maxkonckyy.workers.dev';
+  const workerUrl = `${workerBaseUrl}/api/weather?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m&forecast_days=1`;
 
   try {
     const response = await fetch(workerUrl);

@@ -1,0 +1,5 @@
+name = "weather-worker"
+main = "cloudflare-worker.js"
+compatibility_date = "2023-10-26"
+account_id = "2aa869f3e36b18d25290f11c4a609af4"
+routes = []

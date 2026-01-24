@@ -2,7 +2,7 @@ addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request))
 })
 
-const PWA_ORIGIN = 'YOUR_PWA_ORIGIN'; // Replace with the actual domain where your PWA static assets are hosted.
+const PWA_ORIGIN = 'https://YOUR_PAGES_DOMAIN'; // !!! IMPORTANT: Replace with your actual Cloudflare Pages domain (e.g., https://your-project-name.pages.dev) // Replace with the actual domain where your PWA static assets are hosted.
 const WEATHER_API_BASE_URL = 'https://api.open-meteo.com/v1/forecast';
 const WEATHER_CACHE_NAME = 'weather-cache-v1';
 
