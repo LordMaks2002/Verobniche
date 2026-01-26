@@ -1,12 +1,18 @@
 import './style.css';
 import { initClock } from './modules/clock.js';
-import { getWeather } from './modules/weather.js';
+import { getWeather } from './modules/weather_client.js';
+import { handleAuthClick, handleSignoutClick } from './modules/calendar.js';
 
 document.querySelector('#app').innerHTML = `
   <div>
     <h1>Personal Planner</h1>
     <div id="live-clock"></div>
     <div id="weather"></div>
+    
+    <h2>Calendar</h2>
+    <button id="authorize_button" style="visibility: hidden">Authorize</button>
+    <button id="signout_button" style="visibility: hidden">Sign Out</button>
+    <div id="calendar"></div>
   </div>
 `;
 
@@ -16,7 +22,6 @@ async function showWeather() {
   const weatherElement = document.querySelector('#weather');
   weatherElement.innerHTML = '<p>Loading weather...</p>';
 
-  // Co-ordinates for Kyiv
   const lat = 50.45;
   const lon = 30.52;
 
@@ -27,7 +32,6 @@ async function showWeather() {
     const now = new Date();
     const currentHour = now.getHours();
 
-    // Find the index for the current hour
     const hourlyIndex = hourly.time.findIndex(t => new Date(t).getHours() === currentHour);
 
     let forecastHtml = '<h2>Weather</h2>';
@@ -48,8 +52,11 @@ async function showWeather() {
     forecastHtml += '</ul>';
     weatherElement.innerHTML = forecastHtml;
   } else {
-    weatherElement.innerHTML = '<p>Could not load weather data.</p>';
+    weatherElement.innerHTML = '<p>Could not load weather data. The service may be temporarily unavailable.</p>';
   }
 }
 
 showWeather();
+
+document.getElementById('authorize_button').addEventListener('click', handleAuthClick);
+document.getElementById('signout_button').addEventListener('click', handleSignoutClick);

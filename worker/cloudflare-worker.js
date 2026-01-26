@@ -2,8 +2,8 @@ addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request))
 })
 
-const PWA_ORIGIN = 'https://YOUR_PAGES_DOMAIN'; // !!! IMPORTANT: Replace with your actual Cloudflare Pages domain (e.g., https://your-project-name.pages.dev) // Replace with the actual domain where your PWA static assets are hosted.
-const WEATHER_API_BASE_URL = 'https://api.open-meteo.com/v1/forecast';
+const PWA_ORIGIN = 'https://440cb42f.realexaplecal.pages.dev';
+const WEATHER_API_BASE_URL = 'https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m';
 const WEATHER_CACHE_NAME = 'weather-cache-v1';
 
 async function handleRequest(request) {
@@ -29,8 +29,11 @@ async function handleWeatherRequest(request, url) {
     // If not in cache, fetch from the actual weather API
     // Reconstruct the weather API URL using query parameters from the worker request
     const weatherApiUrl = new URL(WEATHER_API_BASE_URL);
+    const allowedParams = ['latitude', 'longitude', 'hourly', 'current_weather', 'forecast_days'];
     url.searchParams.forEach((value, key) => {
-      weatherApiUrl.searchParams.append(key, value);
+      if (allowedParams.includes(key)) {
+        weatherApiUrl.searchParams.append(key, value);
+      }
     });
 
     try {
@@ -52,7 +55,7 @@ async function handleWeatherRequest(request, url) {
   }
 
   // Add security headers to the weather API response as well
-  addSecurityHeaders(response);
+  addSecurityHeaders(response, request);
   return response;
 }
 
@@ -60,11 +63,11 @@ async function handleStaticAssetRequest(request, url) {
   const response = await fetch(PWA_ORIGIN + url.pathname, request);
   const newResponse = new Response(response.body, response);
 
-  addSecurityHeaders(newResponse);
+  addSecurityHeaders(newResponse, request);
   return newResponse;
 }
 
-function addSecurityHeaders(response) {
+function addSecurityHeaders(response, request) { // Added request parameter
   // Add Security Headers
   response.headers.set('Strict-Transport-Security', 'max-age=15552000; includeSubDomains; preload');
   response.headers.set(
@@ -72,8 +75,8 @@ function addSecurityHeaders(response) {
     "default-src 'self'; " +
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
     "style-src 'self' 'unsafe-inline'; " +
-    "img-src 'self' data:; " +
-    `connect-src 'self' https://api.open-meteo.com; ` + // Allow connection to Open-Meteo API through the worker
+    "img-src 'self' data: *.cloudflareaccess.com *.workers.dev *.pages.dev; " +
+    `connect-src 'self' https://api.open-meteo.com *.cloudflareaccess.com *.workers.dev *.pages.dev; ` + // Allow connection to Open-Meteo API through the worker
     "manifest-src 'self';" +
     "frame-ancestors 'none';"
   );
@@ -81,4 +84,18 @@ function addSecurityHeaders(response) {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'no-referrer-when-downgrade');
+
+  // Add CORS headers dynamically based on the request origin
+  const origin = request.headers.get('Origin');
+  // Explicitly allow localhost:5173 for development
+  // And the defined PWA_ORIGIN for production deployments
+  if (origin && (origin === 'http://localhost:5173' || origin === PWA_ORIGIN)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+  } else {
+    // Fallback or stricter policy if origin is not explicitly allowed
+    // For wider access, you might set 'Access-Control-Allow-Origin', '*'
+    // but this is less secure. Stick to specific origins if possible.
+  }
+  response.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
 }
